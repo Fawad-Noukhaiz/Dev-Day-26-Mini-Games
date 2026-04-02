@@ -1,0 +1,41 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050210;
+}
+
+.App {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(ellipse at 50% 30%, #1a0a30 0%, #0a0518 40%, #050210 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.App::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(100, 50, 150, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 60%, rgba(50, 100, 200, 0.1) 0%, transparent 40%),
+    radial-gradient(ellipse at 60% 80%, rgba(150, 50, 100, 0.08) 0%, transparent 45%);
+  pointer-events: none;
+}
