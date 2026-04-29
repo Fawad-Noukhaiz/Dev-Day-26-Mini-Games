@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./App.css";
+import { getParticipant, postScore } from "./api";
 
-const API_BASE_URL = "https://minigame-manager-cc533de7be66.herokuapp.com/api";
 const PLAYER_CODE_STORAGE_KEY = "devday_minigame_code";
 const PLAYER_NAME_STORAGE_KEY = "devday_minigame_name";
 const BEST_SCORE_STORAGE_KEY = "cf_best_v2";
-const CLICK_FRENZY_API_KEY = "mgk_90dd21ef6f9632ff04c93e7219dbfebe7c5b5d552484942022a39ce1a63be9b9";
 const CLICK_FRENZY_GAME_ID = "fc84b413-6c6f-47e9-ac7d-220981a42d54";
 
 class SoundEngine {
@@ -285,50 +284,29 @@ export default function App() {
     const code = normalizeCode(rawCode);
     if (!code) throw new Error("Enter your participant code to play.");
 
-    const response = await fetch(
-      `${API_BASE_URL}/participants/${encodeURIComponent(code)}`
-    );
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(data.message || "Could not verify participant code.");
-    }
-
+    const data = await getParticipant(code);
     return { code, fullName: data.fullName || code };
-  }, []);
+  }, [getParticipant]);
 
   const submitScore = useCallback(async (finalScore, playTime) => {
     const userCode = playerCodeRef.current;
     if (!userCode) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/scores`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": CLICK_FRENZY_API_KEY,
-        },
-        body: JSON.stringify({
-          userCode,
-          gameId: CLICK_FRENZY_GAME_ID,
-          score: finalScore,
-          playTime: Number(playTime.toFixed(1)),
-          metadata: {},
-        }),
+      const data = await postScore({
+        userCode,
+        gameId: CLICK_FRENZY_GAME_ID,
+        score: finalScore,
+        playTime: Number(playTime.toFixed(1)),
+        metadata: {},
       });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const message = data.message || data.errors?.[0]?.msg || "Score submission failed.";
-        throw new Error(message);
-      }
 
       console.log("Score submitted:", data);
     } catch (err) {
       console.error(err);
       setApiMessage(err.message || "Score submission failed.");
     }
-  }, []);
+  }, [postScore]);
 
   const doGameOver = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
