@@ -5,7 +5,7 @@ import { getParticipant, postScore } from "./api";
 const PLAYER_CODE_STORAGE_KEY = "devday_minigame_code";
 const PLAYER_NAME_STORAGE_KEY = "devday_minigame_name";
 const BEST_SCORE_STORAGE_KEY = "cf_best_v2";
-const CLICK_FRENZY_GAME_ID = "fc84b413-6c6f-47e9-ac7d-220981a42d54";
+const CLICK_FRENZY_GAME_ID = "9856fdff-1d4e-468e-bbfe-272fbf6e244a";
 
 class SoundEngine {
   constructor() {
@@ -173,7 +173,7 @@ const PopUp = React.memo(({ x, y, text, color }) => {
       ],
       { duration: 680, easing: "ease-out", fill: "forwards" }
     );
-  }, []);
+  }, [doGameOver]);
   return (
     <div
       ref={ref}
@@ -253,40 +253,13 @@ export default function App() {
   useEffect(() => { vRef.current = view; }, [view]);
   useEffect(() => { playerCodeRef.current = normalizeCode(playerCode); }, [playerCode]);
 
-  const spawn = useCallback((s) => {
-    const el = areaRef.current;
-    if (!el) return;
-    const { width, height } = el.getBoundingClientRect();
-    const r = radius(s);
-    const px = r + 20;
-    const topPad = 100;                       
-    const x = px + Math.random() * Math.max(1, width - px * 2);
-    const y = topPad + Math.random() * Math.max(1, height - topPad - px);
-    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-
-    limit.current = timeMs(s);
-    t0.current = performance.now();
-    setCircle({ x, y, r, color, k: uid.current++ });
-    setRatio(1);
-
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    const tick = (now) => {
-      if (vRef.current !== "play") return;
-      const rem = 1 - (now - t0.current) / limit.current;
-      if (rem <= 0) { setRatio(0); doGameOver(); return; }
-      setRatio(rem);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  }, []);
-
   const lookupParticipant = useCallback(async (rawCode) => {
     const code = normalizeCode(rawCode);
     if (!code) throw new Error("Enter your participant code to play.");
 
     const data = await getParticipant(code);
     return { code, fullName: data.fullName || code };
-  }, [getParticipant]);
+  }, []);
 
   const submitScore = useCallback(async (finalScore, playTime) => {
     const userCode = playerCodeRef.current;
@@ -306,7 +279,7 @@ export default function App() {
       console.error(err);
       setApiMessage(err.message || "Score submission failed.");
     }
-  }, [postScore]);
+  }, []);
 
   const doGameOver = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -320,6 +293,33 @@ export default function App() {
     const b = parseInt(localStorage.getItem(BEST_SCORE_STORAGE_KEY) || "0", 10);
     if (s > b) { localStorage.setItem(BEST_SCORE_STORAGE_KEY, String(s)); setBest(s); }
   }, [submitScore]);
+
+  const spawn = useCallback((s) => {
+    const el = areaRef.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    const r = radius(s);
+    const px = r + 20;
+    const topPad = 100;
+    const x = px + Math.random() * Math.max(1, width - px * 2);
+    const y = topPad + Math.random() * Math.max(1, height - topPad - px);
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+    limit.current = timeMs(s);
+    t0.current = performance.now();
+    setCircle({ x, y, r, color, k: uid.current++ });
+    setRatio(1);
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    const tick = (now) => {
+      if (vRef.current !== "play") return;
+      const rem = 1 - (now - t0.current) / limit.current;
+      if (rem <= 0) { setRatio(0); doGameOver(); return; }
+      setRatio(rem);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, [doGameOver]);
 
   const beginRound = useCallback(() => {
     sfx.init();

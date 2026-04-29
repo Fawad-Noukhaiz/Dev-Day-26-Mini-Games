@@ -18,7 +18,9 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.CLICK_FRENZY_API_KEY;
+  const apiKey =
+    process.env.CLICK_FRENZY_API_KEY ||
+    "mgk_184172a0170a7259dc73bcd9326833e7bb307189b92ded87fa4f84f28f0151ec";
   if (!apiKey) {
     res.status(500).json({ message: "Server API key is not configured." });
     return;
