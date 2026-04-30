@@ -173,7 +173,7 @@ const PopUp = React.memo(({ x, y, text, color }) => {
       ],
       { duration: 680, easing: "ease-out", fill: "forwards" }
     );
-  }, [doGameOver]);
+  }, [color, text, x, y]);
   return (
     <div
       ref={ref}
